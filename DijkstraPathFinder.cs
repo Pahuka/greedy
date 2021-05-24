@@ -23,44 +23,39 @@ namespace Greedy
             var queue = new Queue<Point>();
             var visitedPoint = new HashSet<Point>();
             var price = 0;
-            var result = new List<PathWithCost> {new PathWithCost(price, start) };
+            //var result = new List<PathWithCost> {new PathWithCost(price, start) };
+            var result = new List<Point>() { start };
 
             visitedPoint.Add(start);
             queue.Enqueue(start);
             pathList[start] = new List<Tuple<Point, int>>();
-            //pointList.Add(start, new List<Point>());
 
-            //while (true)
-            //{
-            //    BestPrice(state, pathList, openPoint);
-            //    if (openPoint == new Point(-1, -1)) yield return null;
-            //}
-
-            while (visitedPoint.Count < state.CellCost.Length)
+            while (queue.Count != 0)
             {
                 PointGeneration(state, queue, pathList, visitedPoint);
             }
 
             var point = pathList[start].OrderBy(x => x.Item2).First();
             visitedPoint.Clear();
-            visitedPoint.Add(start);
+            visitedPoint.Add(point.Item1);
 
             while (true)
             {
-                if (!visitedPoint.Contains(point.Item1))
+                price += point.Item2;
+                result.Add(point.Item1);
+                if (price <= state.InitialEnergy && state.Chests.Any(x => x == point.Item1))
                 {
-                    price += point.Item2;
-                    result.Add(new PathWithCost(price, point.Item1));
+                    yield return new PathWithCost(price, result.ToArray());
+                    price = 0;
+                    result.RemoveRange(1, result.Count - 1);
+                    point = pathList[start].Where(x => !visitedPoint.Contains(x.Item1)).First();
                     visitedPoint.Add(point.Item1);
                 }
-                if (state.Chests.Any(x => x == point.Item1)) yield break;
-                point = pathList[point.Item1].OrderBy(x => x.Item2).First();
+                if (visitedPoint.Count == state.Chests.Count) break;
+                else point = pathList[point.Item1].First();
             }
 
-            foreach (var item in result)
-            {
-                yield return item;
-            };
+            //yield return result;
         }
 
         public static void PointGeneration(
@@ -74,24 +69,26 @@ namespace Greedy
                     else
                     {
                         var tPoint = new Point { X = point.X + dx, Y = point.Y + dy };
-                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint) && point != tPoint)
+                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint)
+                            && !visitedPoint.Contains(tPoint) && !queue.Contains(tPoint))
                         {
-                            if (visitedPoint.Contains(point) && !pathList[point].Any(x => x.Item1 == tPoint))
+                            if (pathList.ContainsKey(point))
                             {
                                 pathList[point].Add(Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]));
                                 queue.Enqueue(tPoint);
+                                visitedPoint.Add(tPoint);
                             }
-                            else if (!pathList.ContainsKey(point))
+                            else
                             {
                                 pathList.Add(point, new List<Tuple<Point, int>>
                                 { Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]) });
-                                visitedPoint.Add(point);
+                                visitedPoint.Add(tPoint);
                                 queue.Enqueue(tPoint);
                             }
                         }
                     }
         }
 
-        
+
     }
 }
