@@ -24,7 +24,7 @@ namespace Greedy
             var chestFind = 0;
             var chestPoint = new HashSet<Point>();
             //var result = new List<List<Tuple<Point, int>>> { new List<Tuple<Point, int>> {Tuple.Create(start, 1) } };
-            var result = new List<DijkstraData> { new DijkstraData {Previus = null, Actual = start, Price = 1 } };
+            var result = new List<DijkstraData> { new DijkstraData { Previus = null, Actual = start, Price = 1 } };
 
             visitedPoint.Add(start);
             queue.Enqueue(start);
@@ -82,7 +82,7 @@ namespace Greedy
                         takePath.Reverse();
                         yield return new PathWithCost(price, takePath.ToArray());
                     }
-                        //yield return new PathWithCost(point.Item2, result.Where(p => p.Previus).ToArray());
+                    //yield return new PathWithCost(point.Item2, result.Where(p => p.Previus).ToArray());
                 }
             }
 
@@ -122,7 +122,7 @@ namespace Greedy
         {
             var point = queue.Dequeue();
             visitedPoint.Add(point);
-            var result = new List<Tuple<Point, int>> {Tuple.Create(point, state.CellCost[point.X, point.Y])};
+            var result = new List<Tuple<Point, int>> { Tuple.Create(point, state.CellCost[point.X, point.Y]) };
 
             for (var dy = -1; dy <= 1; dy++)
                 for (var dx = -1; dx <= 1; dx++)
@@ -130,7 +130,7 @@ namespace Greedy
                     else
                     {
                         var tPoint = new Point { X = point.X + dx, Y = point.Y + dy };
-                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint) 
+                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint)
                             && tPoint != point && !visitedPoint.Contains(tPoint))
                         {
                             //visitedPoint.Add(tPoint);
