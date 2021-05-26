@@ -30,7 +30,7 @@ namespace Greedy
             queue.Enqueue(start);
             //pathList[start] = new List<Tuple<Point, int>>();
 
-            while (chestFind.Count > 0)
+            while (chestFind.Count > 0 && queue.Count > 0)
             {
                 var stepPoint = PointGeneration(state, queue, visitedPoint);
 
@@ -51,6 +51,11 @@ namespace Greedy
                         {
                             resultPath.RemoveAt(resultPath.Count - 1);
                             tKey = resultPath.Last();
+                        }
+                        else if (t.Select(p => p.Item1).Contains(start))
+                        {
+                            resultPath.Add(t.Where(p => p.Item1 == start).Single());
+                            break;
                         }
                         else
                         {
