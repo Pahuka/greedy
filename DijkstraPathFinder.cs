@@ -18,11 +18,11 @@ namespace Greedy
         public IEnumerable<PathWithCost> GetPathsByDijkstra(State state, Point start,
             IEnumerable<Point> targets)
         {
-            //var pathList = new Dictionary<Point, List<Tuple<Point, int>>>();
+            var pathList = new Dictionary<Point, List<Tuple<Point, int>>>();
             var queue = new Queue<Point>();
             var visitedPoint = new HashSet<Point>();
-            var chestFind = 0;
-            var chestPoint = new HashSet<Point>();
+            var chestFind = targets.ToList();
+
             //var result = new List<List<Tuple<Point, int>>> { new List<Tuple<Point, int>> {Tuple.Create(start, 1) } };
             var result = new List<DijkstraData> { new DijkstraData { Previus = null, Actual = start, Price = 1 } };
 
@@ -30,90 +30,42 @@ namespace Greedy
             queue.Enqueue(start);
             //pathList[start] = new List<Tuple<Point, int>>();
 
-            while (chestFind < state.Chests.Count)
+            while (chestFind.Count > 0)
             {
                 var stepPoint = PointGeneration(state, queue, visitedPoint);
 
-                //if (state.Chests.Contains(stepPoint.Last().Item1))
-                //{
-                //    chestFind++;
-                //    yield return new PathWithCost(stepPoint.Last().Item2, stepPoint.Select(p => p.Item1).ToArray());
-                //}
+                pathList[stepPoint.Take(1).Single().Item1] = stepPoint.Skip(1).ToList();
 
-                foreach (var point in stepPoint.Skip(1).OrderBy(p => p.Item2))
+                if (chestFind.Any(p => p == stepPoint.Take(1).Single().Item1))
                 {
-
-                    if (result.Last().Previus == null)
+                    var tKey = stepPoint.Take(1).Single();
+                    var pathPrice = tKey.Item2;
+                    var visitPoint = new List<Tuple<Point, int>>();
+                    var resultPath = new List<Tuple<Point, int>>() { tKey };
+                    while (tKey.Item1 != start)
                     {
-                        var tData = new DijkstraData
+                        var t = pathList[tKey.Item1]
+                            .Where(key => pathList.ContainsKey(key.Item1) && !visitPoint.Contains(key))
+                            .OrderBy(price => price.Item2).ToList();
+                        if (t.Count == 0)
                         {
-                            Previus = result.First(),
-                            Actual = point.Item1,
-                            Price = point.Item2
-                        };
-                        result.Add(tData);
-                    }
-                    else
-                    {
-                        var tData = new DijkstraData
-                        {
-                            Previus = result.Where(p => p.Actual == stepPoint.First().Item1).First(),
-                            Actual = point.Item1,
-                            Price = point.Item2
-                        };
-                        result.Add(tData);
-                    };
-                    if (state.Chests.Contains(point.Item1) && !chestPoint.Contains(point.Item1))
-                    {
-                        chestPoint.Add(point.Item1);
-                        chestFind++;
-                        var prevData = result.Where(p => p.Actual == point.Item1)
-                            .Select(p => p.Previus).Single();
-                        var takePath = new List<Point> { point.Item1 };
-                        var price = point.Item2;
-                        while (prevData.Previus != null)
-                        {
-                            takePath.Add(prevData.Actual);
-                            price += prevData.Price;
-                            prevData = prevData.Previus;
+                            resultPath.RemoveAt(resultPath.Count - 1);
+                            tKey = resultPath.Last();
                         }
-                        takePath.Add(prevData.Actual);
-                        //price += prevData.Price;
-                        takePath.Reverse();
-                        yield return new PathWithCost(price, takePath.ToArray());
+                        else
+                        {
+                            resultPath.Add(t.First());
+                            visitPoint.AddRange(t.Where(p => p.Item1 == resultPath.Last().Item1));
+                            pathPrice += resultPath.Last().Item2;
+                            tKey = resultPath.Last();
+                        }
                     }
-                    //yield return new PathWithCost(point.Item2, result.Where(p => p.Previus).ToArray());
+                    resultPath.Reverse();
+                    chestFind.RemoveAt(chestFind.IndexOf(resultPath.Last().Item1));
+                    yield return new PathWithCost(resultPath.Skip(1).Select(p => p.Item2).Sum(),
+                        resultPath.Select(p => p.Item1).ToArray());
                 }
             }
-
-            #region
-
-            //while (queue.Count != 0)
-            //{
-            //    PointGeneration(state, queue, pathList, visitedPoint);
-            //}
-
-            //var point = pathList[start].OrderBy(x => x.Item2).First();
-            //visitedPoint.Clear();
-            //visitedPoint.Add(point.Item1);
-
-            //while (true)
-            //{
-            //    price += point.Item2;
-            //    result.Add(point.Item1);
-            //    if (price <= state.InitialEnergy && state.Chests.Any(x => x == point.Item1))
-            //    {
-            //        yield return new PathWithCost(price, result.ToArray());
-            //        price = 0;
-            //        result.RemoveRange(1, result.Count - 1);
-            //        point = pathList[start].Where(x => !visitedPoint.Contains(x.Item1)).First();
-            //        visitedPoint.Add(point.Item1);
-            //    }
-            //    if (visitedPoint.Count == state.Chests.Count) break;
-            //    else point = pathList[point.Item1].First();
-            //}
-
-            #endregion
 
             //yield return null;
         }
@@ -130,11 +82,10 @@ namespace Greedy
                     else
                     {
                         var tPoint = new Point { X = point.X + dx, Y = point.Y + dy };
-                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint)
-                            && tPoint != point && !visitedPoint.Contains(tPoint))
+                        if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint) && tPoint != point)
                         {
                             //visitedPoint.Add(tPoint);
-                            queue.Enqueue(tPoint);
+                            if (!visitedPoint.Contains(tPoint)) queue.Enqueue(tPoint);
                             result.Add(Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]));
                         }
                     }
