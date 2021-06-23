@@ -23,21 +23,7 @@ namespace Greedy
 
             while (chestFind.Count > 0 && queue.Count != 0)
             {
-                var stepPoint = PointGeneration(state, queue.Dequeue(), visitedPoint);
-                var centrePoint = stepPoint.Take(1).Single();
-
-                foreach (var item in stepPoint.Skip(1))
-                {
-                    if (!pathList.ContainsKey(item.Item1))
-                        pathList[item.Item1] = Tuple.Create(
-                            centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2);
-                    else
-                    {
-                        pathList[item.Item1] = pathList[item.Item1].Item2 > item.Item2 + pathList[centrePoint.Item1].Item2 ?
-                            Tuple.Create(centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2)
-                            : pathList[item.Item1];
-                    }
-                }
+                AddToDictionary(pathList, PointGeneration(state, queue.Dequeue(), visitedPoint));
 
                 foreach (var item in pathList
                         .OrderBy(x => x.Value.Item2)
@@ -62,6 +48,24 @@ namespace Greedy
 
                     tempRoute.Reverse();
                     yield return new PathWithCost(pathList[tempRoute.Last()].Item2, tempRoute.ToArray());
+                }
+            }
+        }
+
+        public static void AddToDictionary(Dictionary<Point, Tuple<Point, int>> pathList, List<Tuple<Point, int>> stepPoint)
+        {
+            var centrePoint = stepPoint.Take(1).Single();
+
+            foreach (var item in stepPoint.Skip(1))
+            {
+                if (!pathList.ContainsKey(item.Item1))
+                    pathList[item.Item1] = Tuple.Create(
+                        centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2);
+                else
+                {
+                    pathList[item.Item1] = pathList[item.Item1].Item2 > item.Item2 + pathList[centrePoint.Item1].Item2 ?
+                        Tuple.Create(centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2)
+                        : pathList[item.Item1];
                 }
             }
         }
