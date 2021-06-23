@@ -7,134 +7,60 @@ using NUnit.Framework;
 
 namespace Greedy
 {
-    //    public class DijkstraData
-    //    {
-    //        public DijkstraData Previus { get; set; }
-    //        public Point Actual { get; set; }
-    //        public int Price { get; set; }
-    //    }
-
     public class DijkstraPathFinder
     {
         public IEnumerable<PathWithCost> GetPathsByDijkstra(State state, Point start,
             IEnumerable<Point> targets)
         {
-            var pathList = new Dictionary<Point, List<Tuple<Point, int>>>();
-            var queue = new Queue<Point>();
+            var pathList = new Dictionary<Point, Tuple<Point, int>>();
+            var stepCount = state.MapWidth * state.MapHeight;
             var visitedPoint = new HashSet<Point>();
             var chestFind = targets.ToList();
-            var result = new List<PathWithCost>();
-            //var result = new List<List<Tuple<Point, int>>> { new List<Tuple<Point, int>> {Tuple.Create(start, 1) } };
-
             visitedPoint.Add(start);
-            queue.Enqueue(start);
-            //pathList[start] = new List<Tuple<Point, int>>();
 
-            while (chestFind.Count > 0 && queue.Count > 0)
-            {
-                var stepPoint = PointGeneration(state, queue, visitedPoint);
+            pathList[start] = Tuple.Create(start, 0);
 
-                pathList[stepPoint.Take(1).Single().Item1] = stepPoint.Skip(1).ToList();
+            while (chestFind.Count > 0 && stepCount > 0)
+            {                
+                var stepPoint = PointGeneration(state, visitedPoint.Last(), visitedPoint);
+                var centrePoint = stepPoint.Take(1).Single();
 
-                if (pathList.Count == 1 && targets.Contains(stepPoint.First().Item1))
+                foreach (var item in stepPoint.Skip(1))
                 {
-                    yield return new PathWithCost(0, stepPoint.First().Item1);
-                    continue;
-                }
-
-                if (stepPoint.First().Item1 == new Point(10, 9))
-                {
-
-                }
-
-                if (chestFind.Any(p => p == stepPoint.Take(1).Single().Item1))
-                {
-                    var keySelector = new Queue<Tuple<Point, int>>();
-                    keySelector.Enqueue(stepPoint.Take(1).Single());
-                    //var tKey = stepPoint.Take(1).Single();
-                    //var pathPrice = 0;
-                    //var notVisitPoint = new HashSet<Tuple<Point, int>>();
-                    //AddToHash(notVisitPoint, pathList[stepPoint.Take(1).Single().Item1]
-                    //    .Where(key => pathList.ContainsKey(key.Item1)));
-                    //var resultPath = new List<Tuple<Point, int>>() { tKey };
-                    var visitPoints = new HashSet<Point>();
-                    var resultPath = new Dictionary<Tuple<Point, int>, Tuple<Point, int>>();
-
-
-                    while (keySelector.Count != 0)
+                    if (!pathList.ContainsKey(item.Item1))
+                        pathList[item.Item1] = Tuple.Create(
+                            centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2);
+                    else
                     {
-                        var tKey = keySelector.Dequeue();
-                        //AddToHash(notVisitPoint, pathList[tKey.Item1].Where(key => pathList.ContainsKey(key.Item1))
-                        //    .Where(x => x.Item1 != stepPoint.First().Item1));
-                        //var linkPoints = pathList[tKey.Item1]
-                        //    .Where(key => pathList.ContainsKey(key.Item1) && !visitPoints.Contains(key.Item1))
-                        //    .OrderBy(price => price.Item2).ToList();
+                        pathList[item.Item1] = pathList[item.Item1].Item2 > item.Item2 + pathList[centrePoint.Item1].Item2 ?
+                            Tuple.Create(centrePoint.Item1, item.Item2 + pathList[centrePoint.Item1].Item2) 
+                            : pathList[item.Item1];
+                    }
+                }
+                
+                visitedPoint.Add(pathList
+                    .OrderBy(x => x.Value.Item2)
+                    .Where(x => !visitedPoint.Contains(x.Key))
+                    .Take(1)
+                    .SingleOrDefault()
+                    .Key);
 
-                        var linkPoints = pathList[tKey.Item1]
-                            .Where(key => !visitPoints.Contains(key.Item1))
-                            .OrderBy(price => price.Item2).ToList();
+                if (chestFind.Any(x => visitedPoint.Contains(x)))
+                {
+                    var tkey = chestFind.Where(x => visitedPoint.Contains(x)).Single();
+                    chestFind.Remove(tkey);
+                    var tempRoute = new List<Point>() { tkey };
 
-                        visitPoints.Add(tKey.Item1);
-
-                        if (linkPoints.Count == 0)
-                        {
-                            continue;
-                            //resultPath.RemoveAt(resultPath.Count - 1);
-                            //tKey = resultPath.Last();
-                        }
-
-
-                        foreach (var item in linkPoints)
-                        {
-                            var key = Tuple.Create(item.Item1, item.Item2 + tKey.Item2);
-                            if (item.Item1 == start)
-                                resultPath[Tuple.Create(item.Item1, tKey.Item2)] = tKey;
-                            else resultPath[key] = tKey;
-
-                            keySelector.Enqueue(resultPath.Keys.Last());
-                        }
-
-                        //if (tKey.Item1 == start)
-                        //{
-                        //    var x = resultPath.OrderBy(price => price.Key.Item2).Where(p => p.Key.Item1 == tKey.Item1).First().Key;
-                        //    var pathPrice = x.Item2;
-                        //    var list = new List<Point>() { x.Item1 };
-                        //    while (resultPath.ContainsKey(x))
-                        //    {
-                        //        x = resultPath[x];
-                        //        list.Add(x.Item1);
-                        //    }
-                        //    chestFind.Remove(list.Last());
-                        //    yield return new PathWithCost(pathPrice, list.ToArray());
-                        //}
+                    while (tkey != start)
+                    {
+                        tempRoute.Add(pathList[tkey].Item1);
+                        tkey = pathList[tkey].Item1;
                     }
 
-                    var x = resultPath
-                        .OrderBy(price => price.Key.Item2)
-                        .Where(p => p.Key.Item1 == start)
-                        .First().Key;
-                    var pathPrice = x.Item2;
-                    var list2 = new List<Point>() { x.Item1 };
-                    while (resultPath.ContainsKey(x))
-                    {
-                        x = resultPath[x];
-                        list2.Add(x.Item1);
-                    }
-                    chestFind.Remove(list2.Last());
-                    result.Add(new PathWithCost(pathPrice, list2.ToArray()));
-                    //yield return new PathWithCost(pathPrice, list2.ToArray());
-
-                    //yield return result.OrderBy(price => price.Cost).First();
-                    //chestFind.RemoveAt(chestFind.IndexOf(resultPath.Last().Item1));
-                    //yield return new PathWithCost(resultPath.Skip(1).Select(p => p.Item2).Sum(),
-                    //    resultPath.Select(p => p.Item1).ToArray());
+                    tempRoute.Reverse();
+                    yield return new PathWithCost(pathList[tempRoute.Last()].Item2, tempRoute.ToArray());
                 }
-
-            }
-
-            foreach (var item in result.OrderBy(price => price.Cost))
-            {
-                yield return item;
+                stepCount--;
             }
         }
 
@@ -146,10 +72,32 @@ namespace Greedy
             }
         }
 
-        public static List<Tuple<Point, int>> PointGeneration(State state, Queue<Point> queue, HashSet<Point> visitedPoint)
+        public static List<Tuple<Point, int>> PointGeneration(State state, Point point, HashSet<Point> visitedPoint)
         {
-            var point = queue.Dequeue();
-            visitedPoint.Add(point);
+            //var point = queue.Dequeue();
+            var result = new List<Tuple<Point, int>> { Tuple.Create(point, state.CellCost[point.X, point.Y]) };
+
+            for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                    if (dx != 0 && dy != 0) continue;
+                    else
+                    {
+                        var tPoint = new Point { X = point.X + dx, Y = point.Y + dy };
+                        if (state.InsideMap(tPoint) && tPoint != point)
+                        {
+                            if (state.IsWallAt(tPoint)) visitedPoint.Add(tPoint);
+                            if (!visitedPoint.Contains(tPoint))
+                            {
+                                //queue.Enqueue(tPoint);
+                                result.Add(Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]));
+                            }
+                        }
+                    }
+            return result;
+        }
+
+        public static List<Tuple<Point, int>> AroundPoints(State state, Point point)
+        {
             var result = new List<Tuple<Point, int>> { Tuple.Create(point, state.CellCost[point.X, point.Y]) };
 
             for (var dy = -1; dy <= 1; dy++)
@@ -160,9 +108,8 @@ namespace Greedy
                         var tPoint = new Point { X = point.X + dx, Y = point.Y + dy };
                         if (state.InsideMap(tPoint) && !state.IsWallAt(tPoint) && tPoint != point)
                         {
-                            //visitedPoint.Add(tPoint);
-                            if (!visitedPoint.Contains(tPoint)) queue.Enqueue(tPoint);
-                            result.Add(Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]));
+                            if (point != tPoint)
+                                result.Add(Tuple.Create(tPoint, state.CellCost[tPoint.X, tPoint.Y]));
                         }
                     }
             return result;
