@@ -40,7 +40,7 @@ namespace Greedy
             HashSet<Point> visitedPoint, List<Point> chestFind, 
             Dictionary<Point, Tuple<Point, int>> pathList, Point start)
         {
-            var tkey = chestFind.Where(x => visitedPoint.Contains(x)).Single();
+            var tkey = chestFind.Where(x => visitedPoint.Contains(x)).First();
             chestFind.Remove(tkey);
             var tempRoute = new List<Point>() { tkey };
 
