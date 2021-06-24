@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Greedy.Architecture;
 using System.Drawing;
-using NUnit.Framework;
 
 namespace Greedy
 {
@@ -12,14 +11,12 @@ namespace Greedy
         public IEnumerable<PathWithCost> GetPathsByDijkstra(State state, Point start,
             IEnumerable<Point> targets)
         {
-            var pathList = new Dictionary<Point, Tuple<Point, int>>();
+            var pathList = new Dictionary<Point, Tuple<Point, int>> { { start, Tuple.Create(start, 0) } };
             var queue = new Queue<Point>();
-            var visitedPoint = new HashSet<Point>();
+            var visitedPoint = new HashSet<Point>(){ start };
             var chestFind = targets.ToList();
 
-            visitedPoint.Add(start);
             queue.Enqueue(start);
-            pathList[start] = Tuple.Create(start, 0);
 
             while (chestFind.Count > 0 && queue.Count != 0)
             {
@@ -35,24 +32,31 @@ namespace Greedy
                 }
 
                 if (chestFind.Any(x => visitedPoint.Contains(x)))
-                {
-                    var tkey = chestFind.Where(x => visitedPoint.Contains(x)).Single();
-                    chestFind.Remove(tkey);
-                    var tempRoute = new List<Point>() { tkey };
-
-                    while (tkey != start)
-                    {
-                        tempRoute.Add(pathList[tkey].Item1);
-                        tkey = pathList[tkey].Item1;
-                    }
-
-                    tempRoute.Reverse();
-                    yield return new PathWithCost(pathList[tempRoute.Last()].Item2, tempRoute.ToArray());
-                }
+                    yield return TakeResult(visitedPoint, chestFind, pathList, start);
             }
         }
 
-        public static void AddToDictionary(Dictionary<Point, Tuple<Point, int>> pathList, List<Tuple<Point, int>> stepPoint)
+        public static PathWithCost TakeResult(
+            HashSet<Point> visitedPoint, List<Point> chestFind, 
+            Dictionary<Point, Tuple<Point, int>> pathList, Point start)
+        {
+            var tkey = chestFind.Where(x => visitedPoint.Contains(x)).Single();
+            chestFind.Remove(tkey);
+            var tempRoute = new List<Point>() { tkey };
+
+            while (tkey != start)
+            {
+                tempRoute.Add(pathList[tkey].Item1);
+                tkey = pathList[tkey].Item1;
+            }
+
+            tempRoute.Reverse();
+
+            return new PathWithCost(pathList[tempRoute.Last()].Item2, tempRoute.ToArray());
+        }
+
+        public static void AddToDictionary(
+            Dictionary<Point, Tuple<Point, int>> pathList, List<Tuple<Point, int>> stepPoint)
         {
             var centrePoint = stepPoint.Take(1).Single();
 
