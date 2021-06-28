@@ -15,7 +15,8 @@ namespace Greedy.Tests
 		[TestCase("maze_2")]
 		[TestCase("maze_3")]
 		[TestCase("maze_4")]
-		public void WinGame_With_State(string stateName)
+        [TestCase("maze_on_chest")]
+        public void WinGame_With_State(string stateName)
 		{
 			var controller =
 				TestsHelper.LoadStateFromInputData_And_MoveThroughPath(

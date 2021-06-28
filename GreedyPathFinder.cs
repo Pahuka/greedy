@@ -6,40 +6,49 @@ using Greedy.Architecture.Drawing;
 
 namespace Greedy
 {
-	public class GreedyPathFinder : IPathFinder
-	{
-		public List<Point> FindPathToCompleteGoal(State state)
-		{
-            var path = new DijkstraPathFinder();
-            var chestsFind = new List<Point>();
+    public class GreedyPathFinder : IPathFinder
+    {
+        public List<Point> FindPathToCompleteGoal(State state)
+        {
+            var chestsCount = state.Chests.ToHashSet();
             var result = new List<Point>();
-            var cost = 0;
 
             if (state.Chests.Count < state.Goal) return new List<Point>();
-
-            while (cost < state.Energy && chestsFind.Count < state.Chests.Count)
+            if (chestsCount.Contains(state.Position))
             {
-                var step = path.GetPathsByDijkstra(state, state.Position, state.Chests);
-                cost += step.Where(x => !chestsFind.Contains(x.Path.Last())).First().Cost;
-
-                if (cost <= state.Energy)
-                {
-                    var way = step.Select(x => x.Path)
-                        .Where(x => !chestsFind.Contains(x.Last()))
-                        .First();
-                    way.RemoveAt(0);
-
-                    result.AddRange(way);
-                    
-                }
-                else break;
-
-                chestsFind.Add(result.Last());
-                state.Position = result.Last();
-
+                state.Scores++;
+                chestsCount.Remove(state.Position);
             }
 
-			return result;
-		}
-	}
+            SearchProcess(state, result, chestsCount);
+
+            return result;
+        }
+
+        public static List<Point> SearchProcess(State state, List<Point> result, HashSet<Point> chestsCount)
+        {
+            var path = new DijkstraPathFinder();
+            var cost = 0;
+
+            while (state.Scores < state.Goal)
+            {
+                var step = path.GetPathsByDijkstra(state, state.Position, chestsCount);
+                if (step.FirstOrDefault() == null) return new List<Point>();
+                cost += step.First().Cost;
+
+                if (cost > state.Energy) return new List<Point>();
+                var way = step.First().Path.Skip(1);
+                foreach (var item in way)
+                {
+                    result.Add(item);
+                }
+
+                state.Scores++;
+                chestsCount.Remove(result.Last());
+                state.Position = result.Last();
+            }
+
+            return result;
+        }
+    }
 }

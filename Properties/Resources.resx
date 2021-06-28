@@ -166,4 +166,7 @@
   <data name="maze_no_energy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\states-for-students\maze_no_energy.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
   </data>
+  <data name="maze_on_chest" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\states-for-students\maze_on_chest.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
+  </data>
 </root>

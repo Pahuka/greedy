@@ -88,6 +88,7 @@
     <Compile Include="Tests\NotGreedyPathFinder_Should.cs" />
     <Content Include="states-for-students\maze_no_chests.txt" />
     <Content Include="states-for-students\maze_no_energy.txt" />
+    <Content Include="states-for-students\maze_on_chest.txt" />
     <Content Include="states-for-students\maze_time_limit.txt" />
     <Content Include="states-for-students\maze_1.txt" />
     <Content Include="states-for-students\maze_2.txt" />
